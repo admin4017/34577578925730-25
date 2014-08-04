@@ -344,7 +344,7 @@ class User_Analysis(R_User):
         return sum(d.values())
     
     def dict_values_to_percentage(self, v, total):
-        return round(float(v) / total * 100, 2)
+        return round(self.check_mod_by_zero(float(v), total) * 100, 2)
             
     def collections_sort(self, items, key, reverse=True):
         return collections.OrderedDict(sorted(items.items(), key=lambda t: t[key], reverse=reverse)) 
