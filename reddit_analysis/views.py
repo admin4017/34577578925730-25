@@ -45,12 +45,14 @@ class IndexView(View):
         get_b = r_user.get_best_comment()
         karma_best = get_b[0]
         best = get_b[1]
-	get_w = r_user.get_worst_comment()
+        get_w = r_user.get_worst_comment()
         karma_worst = get_w[0]
         worst = get_w[1]
-
-	acc_created = r_user.account_created() 
-        karma = r_user.get_comment_karma()
+       
+        acc_created = r_user.account_created()
+        karma = r_user.get_karma()
+        comment_karma = r_user.get_comment_karma()
+        submission_karma = r_user.get_submission_karma()
         karma_p = r_user.avg_karma_p_comment()
         word_count = r_user.get_word_count()
         stop_count = r_user.get_stop_count()
@@ -59,6 +61,7 @@ class IndexView(View):
         edited = r_user.percent_edited()
         sub_rec = r_user.subreddit_recommendation()
         lang = r_user.language_usage()
+        post_types = r_user.post_types()
         # Deal with NoneType/Attribute errors. 
         if comment_count > 0:
             get_first = r_user.get_earliest_comment()
@@ -71,9 +74,11 @@ class IndexView(View):
 
         #### CHART SERIES' ##### 
         top_chart_series = self.top_words_series(top_words)
-        sub_chart_series = self.pie_series(sub_activity)
+        sub_chart_series = self.pie_series('Activity share', sub_activity)
+        post_types_series = self.pie_series('Type share', post_types,)
         lang_series = self.lang_series(lang)
         yearly_activity_series = self.yearly_series(yearly_activity)
+
         # try: 
         #     liked = r_user.liked_content()
         #     disliked = r_user.disliked_content() 
@@ -99,15 +104,18 @@ class IndexView(View):
                     'best': best,
                     'first_comment': first_comment,
                     'karma': karma,
-         	    'karma_p': karma_p,
+                    'comment_karma': comment_karma,
+                    'submission_karma': submission_karma,
+                    'karma_p': karma_p,
                     'karma_p_p': karma_p_p,
                     'karma_best': karma_best,
                     'date': date,
                     'yearly_activity_series': yearly_activity_series,
                     'sub_rec': sub_rec,
-		    'karma_worst': karma_worst,
-	            'worst' : worst,
-	   	    'acc_created': acc_created})
+                    'karma_worst': karma_worst,
+                    'worst': worst,
+                    'post_types_series': post_types_series,
+                    'acc_created': acc_created})
 
     def user_in_db(self, user):
         return User.objects.filter(username=user).count() == 1 
@@ -139,10 +147,10 @@ class IndexView(View):
 
        return {'data': self.dumps([{'name': 'Usage amongst comments', 'data': d}])}
 
-    def pie_series(self, data):
+    def pie_series(self, name, data):
        d = [list((k, v)) for k,v in data.items()]
 
-       return {'data': self.dumps([{'name': 'Activity share', 'data': d}])}
+       return {'data': self.dumps([{'name': name, 'data': d}])}
 
     def yearly_series(self, data):
         return {'data': self.dumps([{'name': 'Posts', 'data': data}])}
@@ -162,9 +170,3 @@ class StopListView(View):
 
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name, {'english_list': ra.ENGLISH_STOPWORDS, 'rest': ra.STOPWORDS_DICT})
-
-class GoogleView(View):
-    template_name = 'reddit_analysis/googledc07046dcfeed7a4.html'
-
-    def get(self, request):
- 	return render(request, self.template_name)
