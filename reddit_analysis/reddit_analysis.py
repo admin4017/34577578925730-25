@@ -221,7 +221,7 @@ class User_Analysis(R_User):
                 return None 
 
             top = (r.get_subreddit_recommendations([s[0] for s in rank[:2]]) if len(rank) > 1 
-                   else r.get_subreddit_recommendations([rank[1][0]]))
+                   else r.get_subreddit_recommendations([rank[0][1]]))
             
             return [t.display_name for t in top]
         
