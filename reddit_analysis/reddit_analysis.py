@@ -25,13 +25,15 @@ class R_User(object):
     def __init__(self, user_name, comment=None):
         self.user = r.get_redditor(user_name)
         self.username = self.user.name
-        self.posts = [p for p in self.user.get_submitted()]
+        self.posts = {i: p for i,p in enumerate(self.user.get_submitted())}
         self.comments = dict() # {count: comment}
         self.word_count = [0,0] # 0=total; 1=words that were checked off. 
         self.unique_words = 0
         self.best_comment = [1, None]
         self.worst_comment = [1, None]
-	self.karma = self.user.comment_karma
+        self.comment_karma = self.user.comment_karma 
+        self.submission_karma = self.user.link_karma 
+        self.karma = self.submission_karma + self.comment_karma
         self.sub_activity = dict()    
         self.lang_usage = {'portuguese': 0,
                                'english': 0, 
@@ -48,14 +50,14 @@ class R_User(object):
                                'turkish': 0, 
                                'italian': 0}
         
-        # "Load" user information and store comments so it's quicker to access.
+        # Store comments so it's quicker to access.
         c_count = 0
         for c in self.user.get_comments(self, limit=None):
             c_count += 1 
             if self.worst_comment[1] is None:
-		self.worst_comment[0], self.worst_comment[1], c.score, c 
-	    if c.score < self.worst_comment[0]:
-		self.worst_comment[0] , self.worst_comment[1] = c.score,c
+                self.worst_comment[0], self.worst_comment[1], c.score, c 
+            if c.score < self.worst_comment[0]:
+                self.worst_comment[0] , self.worst_comment[1] = c.score,c
             if c.score > self.best_comment[0]:
                 self.best_comment[0] , self.best_comment[1] = c.score,c
             body = c.body
@@ -71,8 +73,14 @@ class R_User(object):
     def get_user(self):
         return self.user
     
-    def get_comment_karma(self):
+    def get_karma(self):
         return self.karma 
+    
+    def get_comment_karma(self):
+        return self.comment_karma
+    
+    def get_submission_karma(self):
+        return self.submission_karma
 
     def get_created(self):
         return self.user.created_utc
@@ -89,7 +97,7 @@ class R_User(object):
             return (p for p in self.posts
                     if p.subreddit.display_name == subreddit_filter)        
         else:
-            return self.posts
+            return self.posts.values()
     
     def comment_count(self):
         return len(self.comments)
@@ -282,25 +290,39 @@ class User_Analysis(R_User):
     def percent_edited(self):
         count = sum([1 for c in self.get_comments() if c.edited])
         return round(self.check_mod_by_zero(float(count), self.comment_count()) * 100, 2)
+
     def account_created(self):
         return self.utc_to_readable(self.get_created())
     
+    def post_types(self):
+        types = {'text': 0}
+        for p in self.get_posts():
+            p = p.domain 
+            if self.is_text(p):
+                types['text'] += 1 
+            elif p in types:
+                types[p] += 1
+            else:
+                types[p] = 1
+        return self.collections_sort(types, key=1, reverse=True) 
+        
     # Curently unused functions.  
     # Requires selected R_User to allow voting history. 
-    def liked_content(self, raw=False):
-        liked = self.get_liked_content()
+    # def liked_content(self, raw=False):
+    #     liked = self.get_liked_content()
         
-        return self.content_analysis(liked, raw=raw)
+    #     return self.content_analysis(liked, raw=raw)
     
-    def disliked_content(self, raw=False):
-        disliked = self.get_disliked_content()
+    # def disliked_content(self, raw=False):
+    #     disliked = self.get_disliked_content()
         
-        return self.content_analysis(disliked, raw=raw)
+    #     return self.content_analysis(disliked, raw=raw)
     
     #### #### #### #### HELP FUNCTIONS #### #### #### #### #### #### 
     def check_if_none(self, o):
         if isinstance(o, praw.objects.Comment):
             return o.permalink
+
     def check_mod_by_zero(self, int1, int2):
         try:
             c = int1 / int2
@@ -308,6 +330,9 @@ class User_Analysis(R_User):
             return 0
         else:
             return c 
+
+    def is_text(self, post):
+        return post[:4] == 'self'
 
     def utc_to_readable(self, time): 
         return datetime.datetime.fromtimestamp(time).strftime('%Y-%m-%d')
