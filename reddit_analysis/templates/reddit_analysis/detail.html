@@ -39,7 +39,7 @@
                         <div class="row remove-margin">
                             <div class="col-md-4">
                                 <a href="http://www.reddit.com/user/{{ user.username }}" target="_blank" class="header-title-link">
-                                    <h1><i class="fa fa"></i>{{ user.username }}<small><br>Times Analyzed: {{ user.count }}<br>Comments: {{ comment_count }}<br>Submissions: {{ post_count }}<br>Karma: {{ karma }}</small></h1>
+                                    <h1><i class="fa fa"></i>{{ user.username }}<small><br>Times Analyzed: {{ user.count }}<br>Comments: {{ comment_count }}<br>Submissions: {{ post_count }}<br>Total Karma: {{ karma }}</small></h1>
                                 </a>
                             </div>
                             <div class="col-md-8">
@@ -132,6 +132,7 @@
                                         <p class="well well-sm"><strong><a title="Total word count out of all comments"> Word Count: </strong></a> {{ word_count|safe }}</p>
                                         <p class="well well-sm"><strong><a title="Total amount of unique words amongst all comments"> Unique Words: </a></strong> {{ unique_words|safe }}</p>
                                         <p class="well well-sm"><strong><a title="Average length of a comment"> Average Comment Length: </a></strong> {{ comment_length|safe }} words</p>
+                                        <p class="well well-sm"><strong><a title="Comment karma"> Comment Karma: </strong></a> {{ comment_karma|safe }}</p>
 					<p class="well well-sm"><strong><a title="Average karma per comment"> Average Karma Per Comment: </a></strong> {{ karma_p|safe }}</p>
                                         <p class="well well-sm"><strong><a title="Percentage of comments edited"> Edited Comments: </a></strong> {{ edited|safe }}% edited</p>
                                         <p class="well well-sm"><strong><a href="/stop_list" target="_blank" title="Total amount of words ignored for top words chart. Click to view stop list.">Stop Count: </strong></a> {{ stop_count|safe }}</p>
@@ -141,6 +142,22 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="block">
+                                <div class="block-title">
+                                    <h2 class="text-center"></i> Submission Data </h2>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p class="well well-sm"><strong><a title="Comment karma"> Submission Karma: </strong></a> {{ submission_karma|safe }}</p>
+                                        <p class="well well-sm"><strong><a title="Total word count out of all comments"> Average Karma Per Post: </strong></a> {{ karma_p_p|safe }}</p>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div id='post_types'></div>
+                                     </div>
+                                </div> 
+
+                            </div> 
+
                             <div class="block">
                                 <div class="block-title">
                                     <h2 class="text-center"></i> Posting Activity</h2>
@@ -295,7 +312,7 @@
                     series: seriesOptions
                 });
             }
-            function lang(target, data) {
+            function half_pie(target, title, data) {
                 var seriesOptions = JSON.parse(data);
                 $(target).highcharts({
                     chart: {
@@ -307,7 +324,7 @@
                         marginLeft: 0
                     },
                     title: {
-                        text: 'Language Usage',
+                        text: title,
                         align: 'center',
                         verticalAlign: 'middle',
                         y: 60
@@ -379,7 +396,8 @@
             $(document).ready(function() {
                 top_words('#top_chart', 'Top Words', '{{ top_chart_series.categories|safe }}','{{ top_chart_series.data|safe }}');
                 sub_activity('#sub_activity', '{{ sub_chart_series.data|safe }}');
-                lang('#lang', '{{ lang_series.data|safe }}');
+                half_pie('#lang', 'Language Usage', '{{ lang_series.data|safe }}');
+                half_pie('#post_types', 'Post Types', '{{ post_types_series.data|safe }}');
                 yearly_activity('#yearly_activity', '{{ yearly_activity_series.data|safe }}');
             });
         </script>
